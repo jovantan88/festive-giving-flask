@@ -1,7 +1,9 @@
 from flask import Flask, request, render_template, jsonify, flash, session, redirect, url_for
 from functools import wraps
 from supabase import create_client
+from werkzeug.utils import secure_filename
 import os
+import uuid
 supabase_url = os.environ.get('SUPABASE_URL')
 supabase_key = os.environ.get('SUPABASE_KEY')
 supabase = create_client(supabase_url, supabase_key)
@@ -29,6 +31,7 @@ def login_required(f):
 # def add_data():
 #     response = (supabase.table("Test").insert({"created_at": "2024-12-17 05:32:03+00", "test": "Denmark", "cost": "31"}).execute())
 #     return jsonify(response)
+
 @app.route('/user/signup', methods=['GET'])
 def signup():
     return render_template('signup.html')
@@ -177,3 +180,64 @@ def logout():
         return render_template('login.html')
     except:
         return jsonify({"error": "Error logging out"}), 400
+    
+@app.route('/map', methods=['GET'])
+@login_required
+def map():
+    return render_template('map.html')
+
+@app.route('/add_post', methods=['POST'])
+@login_required
+def add_post():
+    try:
+        # Retrieve form data
+        caption = request.form.get('caption')
+        location_name = request.form.get('location_name')
+        
+        # TODO: Implement geocoding based on location_name to get location_address and coordinates
+        location_address = "Placeholder Address"  # Replace with actual address if available
+        coordinates = "213123,3123131"  # Replace with actual coordinates if available
+
+        # Handle image uploads
+        images = request.files.getlist('images')
+        image_filenames = []
+        print("Images:", images)
+        for image in images:
+            print("Image:", image)
+            if image:
+                # Secure the filename
+                file_name = secure_filename(image.filename)
+                
+                # Read the file content as bytes
+                file_content = image.read()
+                print(f'file_name: {file_name}')
+                random_id = uuid.uuid1()
+                
+                response = supabase.storage.from_('Post_images').upload(
+                    path=f'images/{random_id}.jpeg',          # path
+                    file=file_content,                   # file as bytes
+                    file_options={"content-type": "image/jpeg"}
+                )
+                print("Upload response:", response)
+                image_filenames.append(f'images/{random_id}.jpeg')
+        print('uploading')
+        # Construct the payload for the Supabase table
+        new_post = {
+            "user_id": str(session.get('user_id')),  # Ensure 'user_id' is set in session upon login
+            "image": str(image_filenames),
+            "caption": str(caption),
+            "location_address": str(location_address),
+            "location_name": str(location_name),
+            "coordinates": str(coordinates),
+            "type": 'Event'  # Adjust the type as needed
+        }
+
+        print(f'new_post: {new_post}')
+
+        # Insert into Supabase
+        insert_response = supabase.table('posts').insert(new_post).execute()
+        return jsonify({"message": "Post added successfully"}), 201
+
+    except Exception as e:
+        print("Error in add_post:", e)
+        return jsonify({"error": str(e)}), 500
