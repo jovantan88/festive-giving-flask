@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Home - Christmas Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-red-200 to-green-200 min-h-screen flex flex-col">
+  <!-- Navbar / Header -->
+  <header class="bg-white py-4 shadow-md">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold text-green-800">YourApp</h1>
+      <form id="logoutForm" method="POST" action="/logout">
+        <button
+          type="submit"
+          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+        >
+          Logout
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto px-4 py-8">
+    <div class="bg-white p-6 rounded shadow-md text-center">
+      <h2 class="text-2xl font-bold text-red-700 mb-4">Welcome Home!</h2>
+      <p class="text-gray-700 mb-4">
+        Merry Christmas! Explore the site and discover your next steps.
+      </p>
+      <img
+        src="https://images.unsplash.com/photo-1608889176104-47807643086e?auto=format&fit=crop&w=500&q=60"
+        alt="Christmas Banner"
+        class="mx-auto mb-4 rounded-lg shadow-lg"
+      />
+      <p class="text-green-800 font-semibold">
+        You've successfully logged in. Enjoy the festive season!
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white py-2 shadow-inner">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+      © 2024 YourApp. Wishing you a joyous holiday season.
+    </div>
+  </footer>
+
+</body>
+</html>
