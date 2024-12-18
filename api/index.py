@@ -300,37 +300,3 @@ def add_post():
     except Exception as e:
         print("Error in add_post:", e)
         return jsonify({"error": str(e)}), 500
-
-@app.route('/donate', methods=['GET'])
-@login_required
-def donate():
-    return render_template('donate.html')
-
-@app.route('/donate', methods=['POST'])
-@login_required
-def donate_post():
-    data = request.json
-    amount = data.get('amount')
-    currency = data.get('currency')
-    email = data.get('email')
-
-    if not amount or not currency or not email:
-        flash("Missing fields. Please fill all required details.")
-        return jsonify({"error": "Invalid request data"}), 400
-
-    try:
-        # Create a new donation record
-        response = supabase.table("donations").insert(
-            {
-                "amount": amount,
-                "currency": currency,
-                "email": email
-            }
-        ).execute()
-
-        return jsonify({"message": "Donation added successfully"}), 201
-
-    except Exception as e:
-        print("Error in donate_post:", e)
-        return jsonify({"error": str(e)}), 500
-    
