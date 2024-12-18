@@ -287,36 +287,40 @@
 
         // 20 sample locations
         const locations = [
-            { coords: [103.8198, 1.3521], description: "Central Singapore", color: "#ef4444" },
-            { coords: [103.8545, 1.2868], description: "Merlion Park", color: "#3b82f6" },
-            { coords: [103.8454, 1.2835], description: "Marina Bay Sands", color: "#10b981" },
-            { coords: [103.8324, 1.2843], description: "Esplanade - Theatres on the Bay", color: "#f97316" },
-            { coords: [103.8196, 1.2787], description: "Chinatown", color: "#a855f7" },
-            { coords: [103.8744, 1.3039], description: "Singapore Zoo", color: "#eab308" },
-            { coords: [103.8060, 1.3503], description: "Ang Mo Kio", color: "#ec4899" },
-            { coords: [103.8631, 1.3090], description: "Orchard Road", color: "#06b6d4" },
-            { coords: [103.7820, 1.3687], description: "Jurong Bird Park", color: "#78350f" },
-            { coords: [103.8980, 1.3701], description: "Punggol Waterway Park", color: "#14b8a6" },
-            { coords: [103.8435, 1.2816], description: "ArtScience Museum", color: "#db2777" },
-            { coords: [103.8816, 1.3124], description: "Little India", color: "#ca8a04" },
-            { coords: [103.8025, 1.4024], description: "Woodlands Waterfront", color: "#84cc16" },
-            { coords: [103.9594, 1.3502], description: "Changi Airport", color: "#6366f1" },
-            { coords: [103.8111, 1.2671], description: "Sentosa Island", color: "#8b5cf6" },
-            { coords: [103.8282, 1.2909], description: "Fort Canning Park", color: "#38bdf8" },
-            { coords: [103.9023, 1.3423], description: "East Coast Park", color: "#1d4ed8" },
-            { coords: [103.8197, 1.2903], description: "National Gallery Singapore", color: "#a3e635" },
-            { coords: [103.8719, 1.2975], description: "Botanic Gardens", color: "#b91c1c" },
-            { coords: [103.7987, 1.3447], description: "Bukit Timah Nature Reserve", color: "#047857" }
+            {% for post in post_data %}
+        {
+            coords: [{{ post.longitude }}, {{ post.latitude }}],
+        description: "{{ post.location_address }}",
+            picture_url: "{{post.image[0]}}"
+            },
+        {% endfor %}
         ];
 
+        // Add markers for each location
         // Add markers for each location
         locations.forEach(location => {
             const el = document.createElement('div');
             el.className = 'marker';
-            el.style.backgroundColor = location.color;
+            el.style.backgroundColor = '#ef4444'; // You can keep a default color or remove this line
+
+            const popupContent = document.createElement('div');
+            popupContent.className = 'flex flex-col items-center';
+
+            if (location.picture_url) {
+                const img = document.createElement('img');
+                img.src = location.picture_url;
+                img.alt = 'Post image';
+                img.className = 'w-full h-32 object-cover rounded-t-lg';
+                popupContent.appendChild(img);
+            }
+
+            const description = document.createElement('p');
+            description.textContent = location.description;
+            description.className = 'text-sm mt-2 p-2';
+            popupContent.appendChild(description);
 
             const popup = new mapboxgl.Popup({ offset: 25 })
-                .setText(location.description);
+                .setDOMContent(popupContent);
 
             new mapboxgl.Marker(el)
                 .setLngLat(location.coords)

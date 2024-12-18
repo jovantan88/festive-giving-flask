@@ -4,6 +4,8 @@ from supabase import create_client
 from werkzeug.utils import secure_filename
 import os
 import uuid
+import ast
+
 supabase_url = os.environ.get('SUPABASE_URL')
 supabase_key = os.environ.get('SUPABASE_KEY')
 supabase = create_client(supabase_url, supabase_key)
@@ -224,7 +226,24 @@ def logout():
 @app.route('/map', methods=['GET'])
 @login_required
 def map():
-    return render_template('map.html')
+    response = supabase.table("posts").select("*").execute()
+    data = response.data
+    for post in data:
+        image_links = post.get('image')
+        print(image_links)
+        # Convert to list
+        image_links = ast.literal_eval(image_links)
+        print(image_links)
+        if len(image_links) > 0:
+            image_url = []
+            for image_link in image_links:
+                image_link = supabase.storage.from_('Post_images').get_public_url(image_link)
+                image_url.append(image_link)
+
+            post['image'] = image_url
+    print(data)
+
+    return render_template('map.html', post_data=data)
 
 @app.route('/add_post', methods=['POST'])
 @login_required
