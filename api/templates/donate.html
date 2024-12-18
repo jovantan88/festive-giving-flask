@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate - Christmas Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-gradient-to-b {
+            background: linear-gradient(to bottom, #f00, #0f0);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient-to-b from-red-100 to-green-100 min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <h1 class="text-2xl font-bold text-center mb-4 text-green-700">Donate</h1>
+            <form id="donateForm" class="space-y-4">
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700" for="amount">Amount</label>
+                    <input
+                        class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+                        type="number"
+                        id="amount"
+                        required
+                    />
+                </div>
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700" for="cardNumber">Card Number</label>
+                    <input
+                        class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+                        type="text"
+                        id="cardNumber"
+                        required
+                    />
+                </div>
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700" for="expiryDate">Expiry Date</label>
+                    <input
+                        class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+                        type="text"
+                        id="expiryDate"
+                        required
+                    />
+                </div>
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700" for="cvv">CVV</label>
+                    <input
+                        class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+                        type="text"
+                        id="cvv"
+                        required
+                    />
+                </div>
+                <button
+                    type="submit"
+                    class="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded"
+                >
+                    Donate
+                </button>
+            </form>
+        </div>
+    </div>
+    <script>
+        const donateForm = document.getElementById('donateForm');
+        donateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('amount').value;
+            const cardNumber = document.getElementById('cardNumber').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const cvv = document.getElementById('cvv').value;
+
+            try {
+                const response = await fetch('/donate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, cardNumber, expiryDate, cvv }),
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Donation successful');
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again later.');
+            }
+        });
+    </script>
+</body>
+</html>
