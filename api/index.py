@@ -118,6 +118,46 @@ def login():
 def home():
     return render_template('home.html')
 
+@app.route('/profile/<username>')
+@login_required
+def profile(username):
+    try:
+        user = supabase.auth.get_user()
+        
+        if user and user.user and user.user.user_metadata:
+            current_user = user.user.user_metadata.get('username')
+            
+            if current_user == username:
+                return render_template('profile.html', username=username)
+            else:
+                flash("You can only view your own profile.")
+                return redirect(url_for('home'))
+        else:
+            flash("Unable to retrieve user information.")
+            return redirect(url_for('home'))
+    
+    except Exception as e:
+        print(f"Error retrieving user profile: {e}")
+        flash("An error occurred while retrieving the profile.")
+        return redirect(url_for('home'))
+
+@app.route('/my_profile')
+@login_required
+def my_profile():
+    try:
+        user = supabase.auth.get_user()
+        
+        if user and user.user and user.user.user_metadata:
+            username = user.user.user_metadata.get('username')
+            return redirect(url_for('profile', username=username))
+        else:
+            flash("Unable to retrieve user information.")
+            return redirect(url_for('home'))
+    
+    except Exception as e:
+        print(f"Error retrieving user profile: {e}")
+        flash("An error occurred while retrieving the profile.")
+        return redirect(url_for('home'))
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
