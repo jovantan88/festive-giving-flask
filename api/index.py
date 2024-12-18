@@ -21,6 +21,13 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def is_float_try(str):
+    try:
+        float(str)
+        return True
+    except ValueError:
+        return False
+
 
 # @app.route('/data')
 # def get_data():
@@ -309,21 +316,29 @@ def donate():
 @app.route('/donate', methods=['POST'])
 @login_required
 def donate_post():
+    user = supabase.auth.get_user()
+    email = user.user.email
+
     data = request.json
     amount = data.get('amount')
-    currency = data.get('currency')
-    email = data.get('email')
 
-    if not amount or not currency or not email:
-        flash("Missing fields. Please fill all required details.")
+    if not amount:
+        flash("Missing field. Please fill all required details.")
         return jsonify({"error": "Invalid request data"}), 400
+    
+    if is_float_try(amount):
+        if (amount := float(amount)) <= 0:
+            flash("Invalid amount. Please enter a valid number.")
+            return jsonify({"error": "Invalid amount"}), 400
+    else:
+        flash("Invalid amount. Please enter a valid number.")
+        return jsonify({"error": "Invalid amount"}), 400
 
     try:
         # Create a new donation record
         response = supabase.table("donations").insert(
             {
                 "amount": amount,
-                "currency": currency,
                 "email": email
             }
         ).execute()
@@ -334,3 +349,17 @@ def donate_post():
         print("Error in donate_post:", e)
         return jsonify({"error": str(e)}), 500
     
+@app.route('/donations', methods=['GET'])
+@login_required
+def donations():
+    response = supabase.table("donations").select("*").execute()
+    data: list = response.data
+
+    if data != []:
+        donated_amount = [donation.get('amount') for donation in data]
+    else:
+        donated_amount = [0]
+
+    total_donated = sum(donated_amount)
+
+    return jsonify({"total": total_donated})
