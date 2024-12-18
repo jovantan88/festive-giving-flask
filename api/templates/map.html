@@ -241,6 +241,13 @@
                             name="images">
                     </div>
                 </div>
+                <!-- Event name -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-2" for="postEvent">Event Name</label>
+                    <input type="text"
+                        class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="Enter event name" name="event_name" required />
+                </div>
 
                 <!-- Post Caption -->
                 <div>
@@ -256,6 +263,9 @@
                     <input type="text" id="postLocation"
                         class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                         placeholder="Search location..." name="location_name" required />
+                    <div id="locationSuggestions" class="mt-2"></div>
+                    <input type="text" id="postCoordinates" name="coordinates" readonly
+                        class="w-full mt-2 border border-gray-300 rounded-md p-2 bg-gray-100" placeholder="Coordinates" />
                 </div>
 
                 <button type="submit"
@@ -268,7 +278,7 @@
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1Ijoia3lvdXJhbiIsImEiOiJjbTRtbzU5d3MwNDNvMmtxMTFtNnlhOWQ3In0.8ZI2DsL3T_m6IkGLJgErvA';
-
+    
         // Map initialization
         const startPoint = {
             latitude: 1.3521,
@@ -276,7 +286,7 @@
             zoom: 11.5,
             bearing: 0
         };
-
+    
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11',
@@ -284,60 +294,83 @@
             zoom: startPoint.zoom,
             bearing: startPoint.bearing
         });
-
-        // 20 sample locations
+    
+        // Post locations
         const locations = [
             {% for post in post_data %}
-        {
-            coords: [{{ post.longitude }}, {{ post.latitude }}],
-        description: "{{ post.location_address }}",
-            picture_url: "{{post.image[0]}}"
-            },
-        {% endfor %}
+                {
+                    coords: [{{ post.longitude }}, {{ post.latitude }}],
+                    event_name: "{{ post.event_name }}",
+                    address: "{{ post.location_address }}",
+                    picture_url: "{{post.image[0]}}",
+                    type: 'post'
+                },
+            {% endfor %}
         ];
-
+    
+        // Cause locations
+        const causes = [
+            {% for cause in causes_data %}
+                {
+                    coords: [{{ cause.longitude }}, {{ cause.latitude }}],
+                    event_name: "{{ cause.cause_name }}",
+                    address: "{{ cause.location }}",
+                    picture_url: "{{ cause.image }}",
+                    type: 'cause'
+                },
+            {% endfor %}
+        ];
+    
+        // Combine post and cause locations
+        const allLocations = [...locations, ...causes];
+    
         // Add markers for each location
-        // Add markers for each location
-        locations.forEach(location => {
+        allLocations.forEach(location => {
             const el = document.createElement('div');
             el.className = 'marker';
-            el.style.backgroundColor = '#ef4444'; // You can keep a default color or remove this line
-
+            el.style.backgroundColor = location.type === 'post' ? '#ef4444' : '#22c55e'; // Red for posts, green for causes
+    
             const popupContent = document.createElement('div');
             popupContent.className = 'flex flex-col items-center';
-
+    
             if (location.picture_url) {
                 const img = document.createElement('img');
                 img.src = location.picture_url;
-                img.alt = 'Post image';
+                img.alt = location.type === 'post' ? 'Post image' : 'Cause image';
                 img.className = 'w-full h-32 object-cover rounded-t-lg';
                 popupContent.appendChild(img);
             }
+    
+            // show BOTH the event_name and address in the popup
+            const title = document.createElement('h3');
+            title.textContent = location.event_name;
+            title.className = 'text-lg font-semibold text-gray-800';
+            popupContent.appendChild(title);
 
-            const description = document.createElement('p');
-            description.textContent = location.description;
-            description.className = 'text-sm mt-2 p-2';
-            popupContent.appendChild(description);
-
+            const address = document.createElement('p');
+            address.textContent = location.address;
+            address.className = 'text-sm text-gray-600';
+            popupContent.appendChild(address);
+    
             const popup = new mapboxgl.Popup({ offset: 25 })
                 .setDOMContent(popupContent);
-
+    
             new mapboxgl.Marker(el)
                 .setLngLat(location.coords)
                 .setPopup(popup)
                 .addTo(map);
         });
-
+    
         // Toggle the community post section
         function togglePostSection() {
             const postContainer = document.getElementById('postContainer');
             const postSection = document.getElementById('postSection');
             const toggleIcon = document.getElementById('toggleIcon');
             const togglePath = document.getElementById('togglePath');
-
+    
             // Check if postSection is open by checking its width
             const isOpen = postSection.style.width !== '0px' && postSection.style.width !== '';
-
+    
             if (!isOpen) {
                 // Open the post section
                 postSection.style.width = window.innerWidth < 768 ? '100%' : '400px';
@@ -350,34 +383,93 @@
                 togglePath.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger icon
             }
         }
-
+    
         // NEW POST MODAL CONTROLS
         function openNewPostModal(event) {
             event.stopPropagation();
             document.getElementById('newPostModal').classList.remove('hidden');
             document.getElementById('newPostModal').classList.add('flex');
         }
-
+    
         function closeNewPostModal() {
             document.getElementById('newPostModal').classList.add('hidden');
             document.getElementById('newPostModal').classList.remove('flex');
             document.getElementById('newPostForm').reset();
         }
-
+    
+        // Location search functionality
+        const locationInput = document.getElementById('postLocation');
+        const coordinatesInput = document.getElementById('postCoordinates');
+        const suggestionsList = document.getElementById('locationSuggestions');
+        let debounceTimer;
+    
+        locationInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const query = this.value;
+                if (query.length > 2) {
+                    searchLocation(query);
+                } else {
+                    suggestionsList.innerHTML = '';
+                }
+            }, 300);
+        });
+    
+        async function searchLocation(query) {
+            const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`;
+            const params = new URLSearchParams({
+                access_token: mapboxgl.accessToken,
+                limit: 5
+            });
+    
+            try {
+                const response = await fetch(`${endpoint}?${params}`);
+                const data = await response.json();
+                displaySuggestions(data.features);
+            } catch (error) {
+                console.error('Error searching for location:', error);
+            }
+        }
+    
+        function displaySuggestions(features) {
+            suggestionsList.innerHTML = '';
+            features.forEach(feature => {
+                const div = document.createElement('div');
+                div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                div.textContent = feature.place_name;
+                div.onclick = () => selectLocation(feature);
+                suggestionsList.appendChild(div);
+            });
+        }
+    
+        function selectLocation(feature) {
+            locationInput.value = feature.place_name;
+            coordinatesInput.value = `${feature.center[1]}, ${feature.center[0]}`;
+            suggestionsList.innerHTML = '';
+        }
+    
         // Handle form submission
         document.getElementById('newPostForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-
+    
             const form = e.target;
             const formData = new FormData(form);
-
-
+    
+            const coordinates = document.getElementById('postCoordinates').value;
+            // separate to latitude and longitude
+            const [latitude, longitude] = coordinates.split(',').map(coord => parseFloat(coord.trim()));
+    
+            // Add latitude and longitude to form data
+            formData.append('latitude', latitude);
+            formData.append('longitude', longitude);
+            
+            console.log('Form data:', Object.fromEntries(formData), 'Coordinates:', coordinates);
             try {
                 const response = await fetch('/add_post', {
                     method: 'POST',
                     body: formData
                 });
-
+    
                 if (response.ok) {
                     const result = await response.json();
                     alert(result.message || 'Post submitted successfully!');
@@ -392,19 +484,50 @@
                 alert('An unexpected error occurred.');
             }
         });
+    
+    // Adjust post section and container width on window resize
+    window.addEventListener('resize', () => {
+        const postSection = document.getElementById('postSection');
+        const postContainer = document.getElementById('postContainer');
+        const isOpen = postSection.style.width !== '0px' && postSection.style.width !== '';
 
-        // Adjust post section and container width on window resize
-        window.addEventListener('resize', () => {
-            const postSection = document.getElementById('postSection');
-            const postContainer = document.getElementById('postContainer');
-            const isOpen = postSection.style.width !== '0px' && postSection.style.width !== '';
+        if (isOpen) {
+            postSection.style.width = window.innerWidth < 768 ? '100%' : '400px';
+            postContainer.style.width = window.innerWidth < 768 ? '100%' : '403.5px'; // 400px + 3.5rem (~56px)
+        }
+    });
 
-            if (isOpen) {
-                postSection.style.width = window.innerWidth < 768 ? '100%' : '400px';
-                postContainer.style.width = window.innerWidth < 768 ? '100%' : '403.5px'; // 400px + 3.5rem (~56px)
-            }
+    // Initialize map controls
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    map.addControl(new mapboxgl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        trackUserLocation: true
+    }), 'top-right');
+
+    // Function to fly to a specific location
+    function flyToLocation(lng, lat) {
+        map.flyTo({
+            center: [lng, lat],
+            zoom: 15,
+            essential: true
         });
-    </script>
-</body>
+    }
+
+    // Event listener for post clicks (if you want to implement this feature)
+    document.getElementById('postFeed').addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('post-location')) {
+            const lng = parseFloat(e.target.dataset.lng);
+            const lat = parseFloat(e.target.dataset.lat);
+            flyToLocation(lng, lat);
+        }
+    });
+
+    // You can add more JavaScript functions here as needed
+
+</script>
+
 
 </html>

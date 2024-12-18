@@ -80,6 +80,53 @@ def signup_post():
         flash("Error signing up. Please try again.")
         return jsonify({"error": "Error signing up"}), 400
 
+@app.route('/organisation/signup', methods=['GET'])
+def organisation_signup():
+    return render_template('organisation_signup.html')
+
+@app.route('/organisation/signup', methods=['POST'])
+def organisation_signup_post():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+    organisation_name = data.get('organisation_name')
+    organisation_details = data.get('organisation_details')
+
+    if not email or not password or not organisation_name:
+        flash("Missing fields. Please fill all required details.")
+        return jsonify({"error": "Invalid request data"}), 400
+
+    try:
+        # Sign up the user with Supabase
+        response = supabase.auth.sign_up(
+            {
+                "email": email,
+                "password": password,
+                "options": {"data": {"organisation_name": organisation_name, "organisation_details": organisation_details, "role": "organisation"}},
+            }
+        )
+        print("Signup response:", response)
+        # Access user ID from the AuthResponse object
+        user = response.user  # AuthResponse object has a 'user' attribute
+        print("User:", user)
+        if user:
+            print("User signed up successfully:", user)
+            user_id = user.id
+            session['user_id'] = user_id
+            print(user_id)
+
+            flash("Signed up successfully. Please check your email to confirm your account and login again.")
+            return jsonify({"message": "Signed up successfully", "redirect": "/login"}), 200
+        else:
+            print("Sign-up failed.")
+            flash("Sign-up failed. Please try again.")
+            return jsonify({"error": "Sign-up failed"}), 400
+
+    except Exception as e:
+        print("Error during signup:", e)
+        flash("Error signing up. Please try again.")
+        return jsonify({"error": "Error signing up"}), 400
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -105,8 +152,12 @@ def login():
 
             supabase_session = response.session
             session['user_id'] = response.user.id
+            session['role'] = response.user.user_metadata.get('role')
+            print(f'role: {session["role"]}')
 
             flash("Logged in successfully.")
+            if session['role'] == 'organisation':
+                return jsonify({"message": "Logged in successfully", "redirect": "/organisation/home"}), 200
             return jsonify({"message": "Logged in successfully", "redirect": "/home"}), 200
         
         except Exception as e:
@@ -114,6 +165,84 @@ def login():
             flash("Invalid credentials or error logging in.")
             return jsonify({"error": "Invalid credentials or error logging in"}), 400
 
+@app.route('/organisation/home')
+@login_required
+def organisation_home():
+    causes = [
+        {
+            'name': 'Clean Water Initiative',
+            'description': 'Providing clean water to rural communities.',
+            'expected_people': 5000,
+            'location': 'Rural Kenya',
+            'christmas_cards': 250,
+            'donations': 15000
+        },
+        {
+            'name': 'Education for All',
+            'description': 'Building schools and providing educational resources.',
+            'expected_people': 2000,
+            'location': 'Nepal',
+            'christmas_cards': 180,
+            'donations': 22000
+        },
+        {
+            'name': 'Hunger Relief Program',
+            'description': 'Distributing food to families in need.',
+            'expected_people': 10000,
+            'location': 'Urban Brazil',
+            'christmas_cards': 500,
+            'donations': 30000
+        }
+    ]
+    return render_template('organisation_home.html', causes=causes)
+
+@app.route('/organisation/create-cause', methods=['POST'])
+@login_required
+def create_cause():
+    cause_name = request.form.get('cause_name')
+    description = request.form.get('description')
+    expected_people = request.form.get('expected_people')
+    location = request.form.get('location')
+    longitude = request.form.get('longitude')
+    latitude = request.form.get('latitude')
+
+    image = request.files.get('image')
+    if image:
+        # Your existing image handling code...
+        file_name = secure_filename(image.filename)
+        file_content = image.read()
+        random_id = uuid.uuid1()
+        
+        response = supabase.storage.from_('Cause_images').upload(
+            path=f'images/{random_id}.jpeg',
+            file=file_content,
+            file_options={"content-type": "image/jpeg"}
+        )
+        image_filename = f'images/{random_id}.jpeg'
+    else:
+        image_filename = None
+
+    if not cause_name or not description or not expected_people or not location:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        new_cause = {
+            "organisation_id": str(session.get('user_id')),
+            "cause_name": cause_name,
+            "description": description,
+            "expected_people": int(expected_people),
+            "location": location,
+            "image": image_filename,
+            "longitude": float(longitude),
+            "latitude": float(latitude)
+        }
+
+        insert_response = supabase.table('causes').insert(new_cause).execute()
+        return jsonify({"message": "Cause added successfully"}), 201
+
+    except Exception as e:
+        print("Error in create_cause:", e)
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/home')
 @login_required
@@ -241,9 +370,19 @@ def map():
                 image_url.append(image_link)
 
             post['image'] = image_url
-    print(data)
+    
+    organisation_cause_resposne = supabase.table("causes").select("*").execute()
+    organisation_causes = organisation_cause_resposne.data
+    for cause in organisation_causes:
+        image_link = cause.get('image')
+        if image_link:
+            image_link = supabase.storage.from_('Cause_images').get_public_url(image_link)
+            cause['image'] = image_link
+    print(organisation_causes)
 
-    return render_template('map.html', post_data=data)
+
+
+    return render_template('map.html', post_data=data, causes_data=organisation_causes)
 
 @app.route('/add_post', methods=['POST'])
 @login_required
@@ -251,11 +390,12 @@ def add_post():
     try:
         # Retrieve form data
         caption = request.form.get('caption')
-        location_name = request.form.get('location_name')
+        event_name = request.form.get('event_name')
+        location_address = request.form.get('location_name')
+        longitude = request.form.get('longitude')
+        latitude = request.form.get('latitude')
         
         # TODO: Implement geocoding based on location_name to get location_address and coordinates
-        location_address = "Placeholder Address"  # Replace with actual address if available
-        coordinates = "213123,3123131"  # Replace with actual coordinates if available
 
         # Handle image uploads
         images = request.files.getlist('images')
@@ -285,9 +425,10 @@ def add_post():
             "user_id": str(session.get('user_id')),  # Ensure 'user_id' is set in session upon login
             "image": str(image_filenames),
             "caption": str(caption),
+            "event_name": str(event_name),
             "location_address": str(location_address),
-            "location_name": str(location_name),
-            "coordinates": str(coordinates),
+            "longitude": str(longitude),
+            "latitude": str(latitude),
             "type": 'Event'  # Adjust the type as needed
         }
 
