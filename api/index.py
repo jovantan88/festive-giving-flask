@@ -578,6 +578,7 @@ def donate_post():
                 "amount": amount,
                 "email": email,
                 "card_message": card_message,
+                "cause_id": cause_id,
             }
         ).execute()
 
@@ -633,7 +634,7 @@ def leaderboard():
             if cause_id:
                 cause = next((c for c in causes_data if c['id'] == cause_id), None)
                 if cause:
-                    cause_donations[cause['name']] += donation['amount']
+                    cause_donations[cause['cause_name']] += donation['amount']
 
         cause_leaderboard = sorted(cause_donations.items(), key=lambda x: x[1], reverse=True)[:5]
 
@@ -666,24 +667,35 @@ def causes():
 @app.route('/cause/<cause_id>', methods=['GET'])
 @login_required
 def cause_details(cause_id):
+    # Fetch cause details from the causes table
     response = supabase.table("causes").select("*").eq('id', cause_id).execute()
     
     if not response.data:
-        flash("rip bozo", "error")
+        flash("Cause not found", "error")
+        return redirect(url_for('some_default_route'))  # Redirect to a default route if cause not found
     
     cause = response.data[0]
     
+    # Prepare cause details dictionary
     cause_dict = {
         'name': cause['cause_name'],
         'description': cause['short_description'],
         'expected_people': cause['expected_people'],
         'location': cause['location'],
-        'christmas_cards': cause.get('christmas_cards', 0),
         'donations': cause.get('donations', 0),
-        'image_url': cause.get('image_url', None)
+        'image_url': cause.get('image', None)  # Assuming 'image' is the correct field name
     }
     
+    # Fetch card messages from donations table for the specific cause
+    donations_response = supabase.table("donations").select("card_message").eq('cause_id', cause_id).execute()
+    card_messages = [donation['card_message'] for donation in donations_response.data if donation.get('card_message')]
+
+    # Add card messages to the cause dictionary
+    cause_dict['card_messages'] = card_messages
+    cause_dict['christmas_cards'] = len(card_messages)
+
     return render_template('cause_details.html', cause=cause_dict)
+
 
 
 @app.route('/help_cause/<cause_id>', methods=['GET'])
