@@ -81,7 +81,15 @@
 
         var geocoder = new MapboxGeocoder({
             accessToken: mapboxgl.accessToken,
-            types: 'country,region,place,postcode,locality,neighborhood'
+            types: 'poi,address,neighborhood',
+            countries: 'SG',
+            bbox: [103.6, 1.2, 104.0, 1.5], // Bounding box for Singapore
+            proximity: {
+                longitude: 103.8198,
+                latitude: 1.3521
+            },
+            placeholder: 'Search for places in Singapore',
+            mapboxgl: mapboxgl
         });
 
         geocoder.addTo('#geocoder');
@@ -119,7 +127,7 @@
                 alert('An error occurred while creating the cause.');
             });
         });
-        
     </script>
 </body>
 </html>
+

@@ -419,9 +419,12 @@
             const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`;
             const params = new URLSearchParams({
                 access_token: mapboxgl.accessToken,
+                country: 'SG',
+                types: 'place,poi,address',
+                bbox: '103.6,1.2,104.0,1.5', // Bounding box for Singapore
                 limit: 5
             });
-    
+
             try {
                 const response = await fetch(`${endpoint}?${params}`);
                 const data = await response.json();
@@ -436,10 +439,19 @@
             features.forEach(feature => {
                 const div = document.createElement('div');
                 div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
-                div.textContent = feature.place_name;
+                div.textContent = formatPlaceName(feature);
                 div.onclick = () => selectLocation(feature);
                 suggestionsList.appendChild(div);
             });
+        }
+
+        function formatPlaceName(feature) {
+            const mainText = feature.text;
+            const context = feature.context || [];
+            const relevantContext = context
+                .filter(item => item.id.startsWith('neighborhood') || item.id.startsWith('place'))
+                .map(item => item.text);
+            return [mainText, ...relevantContext].join(', ');
         }
     
         function selectLocation(feature) {
