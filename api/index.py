@@ -207,11 +207,13 @@ def organisation_home():
 @login_required
 def create_cause():
     cause_name = request.form.get('cause_name')
-    description = request.form.get('description')
+    short_description = request.form.get('short_description')
+    long_description = request.form.get('long_description')
     expected_people = request.form.get('expected_people')
     location = request.form.get('location')
     longitude = request.form.get('longitude')
     latitude = request.form.get('latitude')
+
 
     image = request.files.get('image')
     if image:
@@ -229,14 +231,15 @@ def create_cause():
     else:
         image_filename = None
 
-    if not cause_name or not description or not expected_people or not location:
+    if not cause_name or not short_description or not long_description or not expected_people or not location:
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
         new_cause = {
             "organisation_id": str(session.get('user_id')),
             "cause_name": cause_name,
-            "description": description,
+            "short_description": short_description,
+            "long_description": long_description,
             "expected_people": int(expected_people),
             "location": location,
             "image": image_filename,
@@ -386,9 +389,6 @@ def map():
             image_link = supabase.storage.from_('Cause_images').get_public_url(image_link)
             cause['image'] = image_link
     print(organisation_causes)
-
-
-
     return render_template('map.html', post_data=data, causes_data=organisation_causes)
 
 @app.route('/add_post', methods=['POST'])
@@ -449,6 +449,8 @@ def add_post():
         print("Error in add_post:", e)
         return jsonify({"error": str(e)}), 500
 
+
+
 @app.route('/donate', methods=['GET'])
 @login_required
 def donate():
@@ -504,3 +506,30 @@ def donations():
     total_donated = sum(donated_amount)
 
     return jsonify({"total": total_donated})
+
+@app.route('/causes', methods=['GET'])
+@login_required
+def causes():
+    response = supabase.table("causes").select("*").execute()
+    data = response.data
+    print(data)
+
+    # attach image link
+    for cause in data:
+        image_link = cause.get('image')
+        if image_link:
+            image_link = supabase.storage.from_('Cause_images').get_public_url(image_link)
+            cause['image'] = image_link
+    
+    # get organi
+
+    return render_template('causes.html', causes=data)
+
+@app.route('/help_cause/<cause_id>', methods=['GET'])
+@login_required
+def help_cause(cause_id):
+    response = supabase.table("causes").select("*").eq('id', cause_id).execute()
+    data = response.data
+    print(data)
+    return render_template('help_cause.html', cause=data[0])
+
