@@ -1,133 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organization Causes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
-    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organization Causes - Christmas Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
+  <script
+    src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+  <link rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+  <style>
+    .snowflake {
+      color: #fff;
+      font-size: 1em;
+      font-family: Arial, sans-serif;
+      text-shadow: 0 0 5px #000;
+    }
+
+    @-webkit-keyframes snowflakes-fall {
+      0% {
+        top: -10%
+      }
+
+      100% {
+        top: 100%
+      }
+    }
+
+    @-webkit-keyframes snowflakes-shake {
+
+      0%,
+      100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0)
+      }
+
+      50% {
+        -webkit-transform: translateX(80px);
+        transform: translateX(80px)
+      }
+    }
+
+    @keyframes snowflakes-fall {
+      0% {
+        top: -10%
+      }
+
+      100% {
+        top: 100%
+      }
+    }
+
+    @keyframes snowflakes-shake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      50% {
+        transform: translateX(80px)
+      }
+    }
+
+    .snowflake {
+      position: fixed;
+      top: -10%;
+      z-index: 9999;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      cursor: default;
+      -webkit-animation-name: snowflakes-fall, snowflakes-shake;
+      -webkit-animation-duration: 10s, 3s;
+      -webkit-animation-timing-function: linear, ease-in-out;
+      -webkit-animation-iteration-count: infinite,  infinite;
+      -webkit-animation-play-state: running, running;
+      animation-name: snowflakes-fall, snowflakes-shake;
+      animation-duration: 10s, 3s;
+      animation-timing-function: linear, ease-in-out;
+      animation-iteration-count: infinite, infinite;
+      animation-play-state: running, running
+    }
+
+    .snowflake:nth-of-type(0) {
+      left: 1%;
+      -webkit-animation-delay: 0s, 0s;
+      animation-delay: 0s, 0s
+    }
+
+    .snowflake:nth-of-type(1) {
+      left: 10%;
+      -webkit-animation-delay: 1s, 1s;
+      animation-delay: 1s, 1s
+    }
+
+    .snowflake:nth-of-type(2) {
+      left: 20%;
+      -webkit-animation-delay: 6s, .5s;
+      animation-delay: 6s, .5s
+    }
+
+    .snowflake:nth-of-type(3) {
+      left: 30%;
+      -webkit-animation-delay: 4s, 2s;
+      animation-delay: 4s, 2s
+    }
+
+    .snowflake:nth-of-type(4) {
+      left: 40%;
+      -webkit-animation-delay: 2s, 2s;
+      animation-delay: 2s, 2s
+    }
+
+    .snowflake:nth-of-type(5) {
+      left: 50%;
+      -webkit-animation-delay: 8s, 3s;
+      animation-delay: 8s, 3s
+    }
+
+    .snowflake:nth-of-type(6) {
+      left: 60%;
+      -webkit-animation-delay: 6s, 2s;
+      animation-delay: 6s, 2s
+    }
+
+    .snowflake:nth-of-type(7) {
+      left: 70%;
+      -webkit-animation-delay: 2.5s, 1s;
+      animation-delay: 2.5s, 1s
+    }
+
+    .snowflake:nth-of-type(8) {
+      left: 80%;
+      -webkit-animation-delay: 1s, 0s;
+      animation-delay: 1s, 0s
+    }
+
+    .snowflake:nth-of-type(9) {
+      left: 90%;
+      -webkit-animation-delay: 3s, 1.5s;
+      animation-delay: 3s, 1.5s
+    }
+
+    .snowflake:nth-of-type(10) {
+      left: 25%;
+      -webkit-animation-delay: 2s, 0s;
+      animation-delay: 2s, 0s
+    }
+
+    .snowflake:nth-of-type(11) {
+      left: 65%;
+      -webkit-animation-delay: 4s, 2.5s;
+      animation-delay: 4s, 2.5s
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-8">Our Organization's Causes</h1>
-        
-        <!-- Create Cause Button -->
-        <button onclick="document.getElementById('createCauseModal').showModal()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-8">
-            Create Cause
-        </button>
 
-        <!-- Create Cause Modal -->
-        <dialog id="createCauseModal" class="p-8 max-w-md mx-auto bg-white rounded-lg shadow-xl">
-            <h2 class="text-2xl font-bold mb-4">Create New Cause</h2>
-            <form id="createCauseForm" class="space-y-4">
-                <div>
-                    <label for="image" class="block text-sm font-medium text-gray-700">Upload Image</label>
-                    <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full">
-                </div>
-                <div>
-                    <label for="cause_name" class="block text-sm font-medium text-gray-700">Cause Name</label>
-                    <input type="text" id="cause_name" name="cause_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                </div>
-                <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700">Short Cause Description</label>
-                    <textarea id="short_description" name="short_description" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
-                </div>
-                <div>
-                    <label for="long_description" class="block text-sm font-medium text-gray-700">Long Cause Description</label>
-                    <textarea id="long_description" name="long_description" rows="6" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
-                </div>
-                <div>
-                    <label for="expected_people" class="block text-sm font-medium text-gray-700">Expected People Helped</label>
-                    <input type="number" id="expected_people" name="expected_people" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                </div>
-                <div>
-                    <label for="location" class="block text-sm font-medium text-gray-700">Cause Location</label>
-                    <div id="geocoder" class="mt-1"></div>
-                    <input type="hidden" id="location" name="location">
-                    <input type="hidden" id="longitude" name="longitude">
-                    <input type="hidden" id="latitude" name="latitude">
-                </div>
-                <div id="coordinates" class="text-sm text-gray-600"></div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="document.getElementById('createCauseModal').close()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancel</button>
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create</button>
-                </div>
-            </form>
-        </dialog>
+<body class="bg-gradient-to-b from-red-200 to-green-200 min-h-screen">
+  <div class="snowflakes" aria-hidden="true">
+    <div class="snowflake">❅</div>
+    <div class="snowflake">❆</div>
+    <div class="snowflake">❅</div>
+    <div class="snowflake">❆</div>
+    <div class="snowflake">❅</div>
+    <div class="snowflake">❆</div>
+    <div class="snowflake">❅</div>
+    <div class="snowflake">❆</div>
+    <div class="snowflake">❅</div>
+    <div class="snowflake">❆</div>
+    <div class="snowflake">❅</div>
+    <div class="snowflake">❆</div>
+  </div>
 
-        <!-- Causes List -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for cause in causes %}
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold mb-2">{{ cause.cause_name }}</h2>
-                <p class="text-gray-600 mb-4">{{ cause.description }}</p>
-                <p class="text-sm text-gray-500 mb-1">Expected people helped: {{ cause.expected_people }}</p>
-                <p class="text-sm text-gray-500 mb-4">Location: {{ cause.location }}</p>
-                <div class="flex justify-between">
-                    <p class="text-sm font-semibold">Christmas cards: {{ cause.christmas_cards }}</p>
-                    <p class="text-sm font-semibold">Donations: ${{ cause.donations }}</p>
-                </div>
-            </div>
-            {% endfor %}
+  <div class="container mx-auto px-4 py-8">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-red-700 mb-4">🎄 Our Organization's Causes 🎄</h1>
+      <button onclick="document.getElementById('createCauseModal').showModal()"
+        class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition duration-300 hover:scale-105">
+        Create New Cause 🎁
+      </button>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for cause in causes %}
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
+        <img src="{{ cause.image_url }}" alt="{{ cause.cause_name }}" class="w-full h-48 object-cover">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold text-red-700 mb-2">{{ cause.cause_name }}</h2>
+          <p class="text-gray-600 mb-4">{{ cause.short_description }}</p>
+          <div class="flex justify-between items-center text-sm text-gray-500 mb-4">
+            <span>👥 Expected impact: {{ cause.expected_people }}</span>
+            <span>📍 {{ cause.location }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-semibold text-green-600">🎄 Cards: {{ cause.christmas_cards }}</span>
+            <span class="text-sm font-semibold text-blue-600">💰 Donations: ${{ cause.donations }}</span>
+          </div>
         </div>
+      </div>
+      {% endfor %}
     </div>
+  </div>
 
-    <script>
-        mapboxgl.accessToken = 'pk.eyJ1Ijoia3lvdXJhbiIsImEiOiJjbTRtbzU5d3MwNDNvMmtxMTFtNnlhOWQ3In0.8ZI2DsL3T_m6IkGLJgErvA';
+  <dialog id="createCauseModal" class="p-8 max-w-md mx-auto bg-white rounded-lg shadow-xl">
+    <h2 class="text-3xl font-bold text-red-700 mb-6">Create New Cause 🎁</h2>
+    <form id="createCauseForm" class="space-y-6">
+      <div>
+        <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Upload Image</label>
+        <input type="file" id="image" name="image" accept="image/*"
+          class="w-full p-2 border border-gray-300 rounded-md">
+      </div>
+      <div>
+        <label for="cause_name" class="block text-sm font-medium text-gray-700 mb-1">Cause Name</label>
+        <input type="text" id="cause_name" name="cause_name" required
+          class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label for="short_description" class="block text-sm font-medium text-gray-700 mb-1">Short Cause
+          Description</label>
+        <textarea id="short_description" name="short_description" rows="3" required
+          class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"></textarea>
+      </div>
+      <div>
+        <label for="long_description" class="block text-sm font-medium text-gray-700 mb-1">Long Cause
+          Description</label>
+        <textarea id="long_description" name="long_description" rows="6" required
+          class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"></textarea>
+      </div>
+      <div>
+        <label for="expected_people" class="block text-sm font-medium text-gray-700 mb-1">Expected People Helped</label>
+        <input type="number" id="expected_people" name="expected_people" required
+          class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Cause Location</label>
+        <div id="geocoder" class="mb-2"></div>
+        <input type="hidden" id="location" name="location">
+        <input type="hidden" id="longitude" name="longitude">
+        <input type="hidden" id="latitude" name="latitude">
+      </div>
+      <div id="coordinates" class="text-sm text-gray-600"></div>
+      <div class="flex justify-end space-x-4">
+        <button type="button" onclick="document.getElementById('createCauseModal').close()"
+          class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-full">Cancel</button>
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full">Create
+          Cause 🎁</button>
+      </div>
+    </form>
+  </dialog>
 
-        var geocoder = new MapboxGeocoder({
-            accessToken: mapboxgl.accessToken,
-            types: 'poi,address,neighborhood',
-            countries: 'SG',
-            bbox: [103.6, 1.2, 104.0, 1.5], // Bounding box for Singapore
-            proximity: {
-                longitude: 103.8198,
-                latitude: 1.3521
-            },
-            placeholder: 'Search for places in Singapore',
-            mapboxgl: mapboxgl
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia3lvdXJhbiIsImEiOiJjbTRtbzU5d3MwNDNvMmtxMTFtNnlhOWQ3In0.8ZI2DsL3T_m6IkGLJgErvA';
+
+    var geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      types: 'poi,address,neighborhood',
+      countries: 'SG',
+      bbox: [103.6, 1.2, 104.0, 1.5], 
+      proximity: {
+        longitude: 103.8198,
+        latitude: 1.3521
+      },
+      placeholder: 'Search for places in Singapore',
+      mapboxgl: mapboxgl
+    });
+
+    geocoder.addTo('#geocoder');
+
+    geocoder.on('result', function (e) {
+      var lon = e.result.center[0];
+      var lat = e.result.center[1];
+      document.getElementById('location').value = e.result.place_name;
+      document.getElementById('longitude').value = lon;
+      document.getElementById('latitude').value = lat;
+      document.getElementById('coordinates').textContent = `Coordinates: ${lon.toFixed(4)}, ${lat.toFixed(4)}`;
+    });
+
+    document.getElementById('createCauseForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      var formData = new FormData(this);
+
+      fetch('/organisation/create-cause', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            alert(data.message);
+            document.getElementById('createCauseModal').close();
+            location.reload();
+          } else if (data.error) {
+            alert(data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while creating the cause.');
         });
-
-        geocoder.addTo('#geocoder');
-
-        geocoder.on('result', function(e) {
-            var lon = e.result.center[0];
-            var lat = e.result.center[1];
-            document.getElementById('location').value = e.result.place_name;
-            document.getElementById('longitude').value = lon;
-            document.getElementById('latitude').value = lat;
-            document.getElementById('coordinates').textContent = `Coordinates: ${lon.toFixed(4)}, ${lat.toFixed(4)}`;
-        });
-
-        document.getElementById('createCauseForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            var formData = new FormData(this);
-            
-            fetch('/organisation/create-cause', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                    document.getElementById('createCauseModal').close();
-                    location.reload();
-                } else if (data.error) {
-                    alert(data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while creating the cause.');
-            });
-        });
-    </script>
+    });
+  </script>
 </body>
-</html>
 
+</html>
