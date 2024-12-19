@@ -113,6 +113,17 @@ def organisation_signup_post():
             }
         )
         print("Signup response:", response)
+        # add organisation details to the organisation table
+        organisation_id = response.user.id
+
+        organisation_data = {
+            "organisation_id": organisation_id,
+            "organisation_name": organisation_name,
+            "organisation_details": organisation_details
+        }
+
+        organisation_response = supabase.table('orgnaisation').insert(organisation_data).execute()
+
         # Access user ID from the AuthResponse object
         user = response.user  # AuthResponse object has a 'user' attribute
         print("User:", user)
@@ -512,7 +523,6 @@ def donations():
 def causes():
     response = supabase.table("causes").select("*").execute()
     data = response.data
-    print(data)
 
     # attach image link
     for cause in data:
@@ -521,7 +531,13 @@ def causes():
             image_link = supabase.storage.from_('Cause_images').get_public_url(image_link)
             cause['image'] = image_link
     
-    # get organi
+    # get organisation metadata
+    for cause in data:
+        organisation_id = cause.get('organisation_id')
+        response = supabase.auth.get_user(organisation_id)
+        organisation = response.user.user_metadata
+        cause['organisation'] = organisation
+    print(data)
 
     return render_template('causes.html', causes=data)
 
