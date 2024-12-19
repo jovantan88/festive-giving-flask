@@ -302,7 +302,31 @@ def create_cause():
 @app.route('/home')
 @login_required
 def home():
-    return render_template('home.html')
+    response = supabase.table('causes').select('*').execute()
+    
+    causes = []
+    for cause in response.data:
+        cause_dict = {
+            'id': cause['id'],
+            'name': cause['cause_name'],
+            'description': cause['short_description'],
+            'expected_people': cause['expected_people'],
+            'location': cause['location'],
+            'christmas_cards': cause.get('christmas_cards', 0),
+            'donations': cause.get('donations', 0),
+            'image_url': None
+        }
+
+        if cause.get('image'):
+            try:
+                image_url = supabase.storage.from_('Cause_images').get_public_url(cause['image'])
+                cause_dict['image_url'] = image_url
+            except Exception as img_error:
+                print(f"Error generating image URL for cause {cause['cause_name']}: {img_error}")
+        
+        causes.append(cause_dict)
+
+    return render_template('home.html', causes=causes)
 
 @app.route('/profile/<username>')
 @login_required
@@ -338,9 +362,11 @@ def profile(username):
 def my_profile():
     try:
         user = supabase.auth.get_user()
+        # print(user)
         
         if user and user.user and user.user.user_metadata:
             username = user.user.user_metadata.get('username')
+            print(username)
             return redirect(url_for('profile', username=username))
         else:
             flash("Unable to retrieve user information.")
@@ -500,8 +526,6 @@ def add_post():
         print("Error in add_post:", e)
         return jsonify({"error": str(e)}), 500
 
-
-
 @app.route('/donate', methods=['GET'])
 @login_required
 def donate():
@@ -636,6 +660,29 @@ def causes():
     print(data)
 
     return render_template('causes.html', causes=data)
+
+@app.route('/cause/<cause_id>', methods=['GET'])
+@login_required
+def cause_details(cause_id):
+    response = supabase.table("causes").select("*").eq('id', cause_id).execute()
+    
+    if not response.data:
+        flash("rip bozo", "error")
+    
+    cause = response.data[0]
+    
+    cause_dict = {
+        'name': cause['cause_name'],
+        'description': cause['short_description'],
+        'expected_people': cause['expected_people'],
+        'location': cause['location'],
+        'christmas_cards': cause.get('christmas_cards', 0),
+        'donations': cause.get('donations', 0),
+        'image_url': cause.get('image_url', None)
+    }
+    
+    return render_template('cause_details.html', cause=cause_dict)
+
 
 @app.route('/help_cause/<cause_id>', methods=['GET'])
 @login_required
