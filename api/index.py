@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, jsonify, flash, session, redi
 from functools import wraps
 from supabase import create_client
 from werkzeug.utils import secure_filename
+from collections import defaultdict
 import os
 import uuid
 import ast
@@ -183,36 +184,70 @@ def login():
             flash("Invalid credentials or error logging in.")
             return jsonify({"error": "Invalid credentials or error logging in"}), 400
 
+# @app.route('/organisation/home')
+# @login_required
+# def organisation_home():
+#     causes = [
+#         {
+#             'name': 'Clean Water Initiative',
+#             'description': 'Providing clean water to rural communities.',
+#             'expected_people': 5000,
+#             'location': 'Rural Kenya',
+#             'christmas_cards': 250,
+#             'donations': 15000
+#         },
+#         {
+#             'name': 'Education for All',
+#             'description': 'Building schools and providing educational resources.',
+#             'expected_people': 2000,
+#             'location': 'Nepal',
+#             'christmas_cards': 180,
+#             'donations': 22000
+#         },
+#         {
+#             'name': 'Hunger Relief Program',
+#             'description': 'Distributing food to families in need.',
+#             'expected_people': 10000,
+#             'location': 'Urban Brazil',
+#             'christmas_cards': 500,
+#             'donations': 30000
+#         }
+#     ]
+#     return render_template('organisation_home.html', causes=causes)
+
 @app.route('/organisation/home')
 @login_required
 def organisation_home():
-    causes = [
-        {
-            'name': 'Clean Water Initiative',
-            'description': 'Providing clean water to rural communities.',
-            'expected_people': 5000,
-            'location': 'Rural Kenya',
-            'christmas_cards': 250,
-            'donations': 15000
-        },
-        {
-            'name': 'Education for All',
-            'description': 'Building schools and providing educational resources.',
-            'expected_people': 2000,
-            'location': 'Nepal',
-            'christmas_cards': 180,
-            'donations': 22000
-        },
-        {
-            'name': 'Hunger Relief Program',
-            'description': 'Distributing food to families in need.',
-            'expected_people': 10000,
-            'location': 'Urban Brazil',
-            'christmas_cards': 500,
-            'donations': 30000
-        }
-    ]
-    return render_template('organisation_home.html', causes=causes)
+    try:
+        organisation_id = str(session.get('user_id'))
+        response = supabase.table('causes').select('*').eq('organisation_id', organisation_id).execute()
+        
+        causes = []
+        for cause in response.data:
+            cause_dict = {
+                'name': cause['cause_name'],
+                'description': cause['short_description'],
+                'expected_people': cause['expected_people'],
+                'location': cause['location'],
+                'christmas_cards': cause.get('christmas_cards', 0),
+                'donations': cause.get('donations', 0),
+                'image_url': None
+            }
+
+        if cause.get('image'):
+                try:
+                    image_url = supabase.storage.from_('Cause_images').get_public_url(cause['image'])
+                    cause_dict['image_url'] = image_url
+                except Exception as img_error:
+                    print(f"Error generating image URL for cause {cause['cause_name']}: {img_error}")
+            
+        causes.append(cause_dict)
+        
+        return render_template('organisation_home.html', causes=causes)
+    
+    except Exception as e:
+        print("whoops:", e)
+        return ":skull it failed", 500
 
 @app.route('/organisation/create-cause', methods=['POST'])
 @login_required
@@ -228,7 +263,6 @@ def create_cause():
 
     image = request.files.get('image')
     if image:
-        # Your existing image handling code...
         file_name = secure_filename(image.filename)
         file_content = image.read()
         random_id = uuid.uuid1()
@@ -280,7 +314,13 @@ def profile(username):
             current_user = user.user.user_metadata.get('username')
             
             if current_user == username:
-                return render_template('profile.html', username=username)
+                response = supabase.table('donations').select('amount').eq('email', user.user.email).execute()
+                donations = response.data
+                
+                total_donations = len(donations)
+                total_amount = sum(donation['amount'] for donation in donations)
+                
+                return render_template('profile.html', username=username, total_donations=total_donations, total_amount=total_amount)
             else:
                 flash("You can only view your own profile.")
                 return redirect(url_for('home'))
@@ -465,8 +505,18 @@ def add_post():
 @app.route('/donate', methods=['GET'])
 @login_required
 def donate():
-    return render_template('donate.html')
-
+    if request.method == 'GET':
+        try:
+            response = supabase.table('causes').select('id, cause_name').execute()
+            
+            causes = [{'id': cause['id'], 'name': cause['cause_name']} for cause in response.data]
+            
+            return render_template('donate.html', causes=causes)
+        
+        except Exception as e:
+            print("Error fetching causes:", e)
+            return "An error occurred while fetching causes", 500
+        
 @app.route('/donate', methods=['POST'])
 @login_required
 def donate_post():
@@ -475,8 +525,9 @@ def donate_post():
 
     data = request.json
     amount = data.get('amount')
+    cause_id = data.get('cause_id')
 
-    if not amount:
+    if not amount or not cause_id:
         flash("Missing field. Please fill all required details.")
         return jsonify({"error": "Invalid request data"}), 400
     
@@ -489,20 +540,34 @@ def donate_post():
         return jsonify({"error": "Invalid amount"}), 400
 
     try:
-        # Create a new donation record
-        response = supabase.table("donations").insert(
+        cause_response = supabase.table("causes").select("*").eq("id", cause_id).execute()
+        if not cause_response.data:
+            return jsonify({"error": "Cause not found"}), 404
+
+        cause = cause_response.data[0]
+        current_donations = cause.get('donations', 0.0)
+        new_donations = current_donations + amount
+
+        donation_response = supabase.table("donations").insert(
             {
                 "amount": amount,
-                "email": email
+                "email": email,
             }
         ).execute()
 
-        return jsonify({"message": "Donation added successfully"}), 201
+        update_response = supabase.table("causes").update(
+            {"donations": new_donations}
+        ).eq("id", cause_id).execute()
+
+        return jsonify({
+            "message": f"Donation of ${amount:.2f} added successfully to {cause['cause_name']}",
+            "new_total": new_donations
+        }), 201
 
     except Exception as e:
         print("Error in donate_post:", e)
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route('/donations', methods=['GET'])
 @login_required
 def donations():
@@ -518,6 +583,43 @@ def donations():
 
     return jsonify({"total": total_donated})
 
+@app.route('/leaderboard', methods=['GET'])
+@login_required
+def leaderboard():
+    try:
+        donations_response = supabase.table("donations").select("*").execute()
+        donations_data = donations_response.data
+
+        total_donated = sum(donation['amount'] for donation in donations_data)
+
+        user_donations = defaultdict(float)
+        for donation in donations_data:
+            user_donations[donation['email']] += donation['amount']
+
+        user_leaderboard = sorted(user_donations.items(), key=lambda x: x[1], reverse=True)[:10]
+
+        causes_response = supabase.table("causes").select("*").execute()
+        causes_data = causes_response.data
+
+        cause_donations = defaultdict(float)
+        for donation in donations_data:
+            cause_id = donation.get('cause_id')
+            if cause_id:
+                cause = next((c for c in causes_data if c['id'] == cause_id), None)
+                if cause:
+                    cause_donations[cause['name']] += donation['amount']
+
+        cause_leaderboard = sorted(cause_donations.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        return render_template('leaderboard.html',
+                               total_donated=total_donated,
+                               user_leaderboard=user_leaderboard,
+                               cause_leaderboard=cause_leaderboard)
+
+    except Exception as e:
+        print("whoops:", e)
+        return ":skull it failed", 500
+    
 @app.route('/causes', methods=['GET'])
 @login_required
 def causes():
@@ -531,12 +633,6 @@ def causes():
             image_link = supabase.storage.from_('Cause_images').get_public_url(image_link)
             cause['image'] = image_link
     
-    # get organisation metadata
-    for cause in data:
-        organisation_id = cause.get('organisation_id')
-        response = supabase.auth.get_user(organisation_id)
-        organisation = response.user.user_metadata
-        cause['organisation'] = organisation
     print(data)
 
     return render_template('causes.html', causes=data)
