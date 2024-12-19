@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Cause Details - Christmas Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-b from-red-200 to-green-200 min-h-screen flex flex-col">
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="container mx-auto mt-4 px-4">
+        {% for message in messages %}
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-2 rounded" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <section class="bg-white p-6 rounded-lg shadow-lg text-center mb-8">
+            <h2 class="text-3xl font-bold text-red-700 mb-2">{{ cause.name }} 🎄</h2>
+            <p class="text-gray-700 mb-4">{{ cause.description }}</p>
+            <div class="flex justify-center space-x-4">
+                <a href="{{ url_for('donate') }}" class="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition duration-300 ease-in-out">Donate</a>
+                <button class="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600">Share Cause</button>
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Cause Stats 📊</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div class="p-4 bg-red-50 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold text-red-600 mb-2">Location</h4>
+                    <p>🗺️ {{ cause.location }}</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold text-green-700 mb-2">Lives Impacted</h4>
+                    <p>👥 <strong>{{ cause.expected_people }}</strong></p>
+                </div>
+                <div class="p-4 bg-yellow-50 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold text-yellow-600 mb-2">Support Received</h4>
+                    <p>🎅 Christmas Cards: <strong>{{ cause.christmas_cards }}</strong></p>
+                    <p>💰 Donations: <strong>${{ cause.donations }}</strong></p>
+                </div>
+            </div>
+        </section>
+
+        {% if cause.image_url %}
+        <section class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Cause Image 📸</h3>
+            <div class="flex justify-center">
+                <img src="{{ cause.image_url }}" alt="{{ cause.name }}" class="max-w-full h-auto rounded-lg shadow-md">
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <h3 class="text-2xl font-bold text-red-700 mb-4">How You Can Help 🤝</h3>
+            <div class="space-y-4">
+                <div class="p-4 bg-green-50 rounded-lg shadow-md">
+                    <div class="p-4 bg-green-50 rounded-lg shadow-md">
+                        <h4 class="font-semibold mb-2">Donate</h4>
+                        <p class="text-gray-700 mb-4">Every donation helps us make a difference. Your contribution will go directly to supporting this cause.</p>
+                        <a href="{{ url_for('donate') }}" class="inline-block bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition duration-300 ease-in-out">
+                            Donate Now
+                        </a>
+                    </div>
+                </div>
+                <div class="p-4 bg-yellow-50 rounded-lg shadow-md">
+                    <h4 class="font-semibold">Volunteer</h4>
+                    <p class="text-gray-700">We're always looking for volunteers to help with various tasks. Your time and skills can make a huge impact!</p>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg shadow-md">
+                    <h4 class="font-semibold">Spread the Word</h4>
+                    <p class="text-gray-700">Share this cause with your friends and family. The more people know about it, the more support we can gather.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Recent Updates 📝</h3>
+            <div class="space-y-4">
+                <div class="p-4 bg-gray-50 rounded-lg shadow-md">
+                    <h4 class="font-semibold">Preparing for the Holiday Season</h4>
+                    <p class="text-gray-700">We're gearing up for a busy holiday season. Your support is crucial in helping us reach our goals and make a difference in the community.</p>
+                    <p class="text-sm text-gray-500 mt-2">Posted on Dec 1, 2024</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg shadow-md">
+                    <h4 class="font-semibold">Thank You to Our Donors</h4>
+                    <p class="text-gray-700">A big thank you to all our donors who have contributed so far. Your generosity is making a real impact!</p>
+                    <p class="text-sm text-gray-500 mt-2">Posted on Nov 25, 2024</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>
