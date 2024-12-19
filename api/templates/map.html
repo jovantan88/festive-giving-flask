@@ -19,12 +19,14 @@
     <!-- Mapbox GL JS -->
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
 
+    <!-- Material symbols (for map icon) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Symbols+Outlined" />
+
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #f3f4f6;
-            /* Tailwind's gray-100 */
+            background-color: #f3f4f6; /* Tailwind's gray-100 */
         }
 
         #map {
@@ -46,7 +48,6 @@
             align-items: flex-start;
             z-index: 10;
             transition: width 0.3s ease-in-out;
-            /* Initial width accommodates only the toggle button */
             width: 3.5rem;
         }
 
@@ -88,8 +89,6 @@
             cursor: pointer;
 
             margin: 1.25rem 1rem 0 0;
-
-            /* Added Properties */
             box-sizing: border-box;
             flex-shrink: 0;
 
@@ -119,7 +118,7 @@
         }
     </style>
 </head>
-
+{% include "includes/sidenav.html" %}
 <body class="font-sans text-gray-800">
 
     <!-- MAP CONTAINER -->
@@ -146,65 +145,54 @@
 
             <!-- FEED CONTENT -->
             <div id="postFeed" class="space-y-4">
-                <!-- SAMPLE POST 1 -->
+                {% for post in post_data %}
                 <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow hover:shadow-md transition">
-                    <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-full w-10 h-10">
+                    <!-- Profile picture placeholder -->
+                    <img src="https://via.placeholder.com/40" alt="Profile Picture" class="rounded-full w-10 h-10">
                     <div class="flex-1">
                         <div class="flex justify-between items-center">
-                            <h3 class="font-bold text-gray-700">SantaClaus
-                                <span class="ml-2 text-xs text-gray-500">(5 mins ago)</span>
+                            <h3 class="font-bold text-gray-700">
+                                {{ post.username }}
+                                <span class="ml-2 text-xs text-gray-500">
+                                    <!-- Show time since created if needed, else leave blank -->
+                                    <!-- Implementing this requires server-side logic -->
+                                </span>
                             </h3>
+                            <!-- Map button -->
+                            <button class="text-gray-500 hover:text-gray-700 post-location"
+                                data-lng="{{ post.longitude }}" data-lat="{{ post.latitude }}">
+                                <span class="material-symbols-outlined">
+                                    pin_drop
+                                </span>
+                            </button>
                         </div>
-                        <p class="text-sm my-2 text-gray-600">
-                            Ho ho ho! Merry Christmas from Merlion Park!
-                        </p>
-                        <div class="text-xs text-gray-500">
-                            <p>📍 Merlion Park</p>
-                            <p>📌 [103.8545, 1.2868]</p>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- SAMPLE POST 2 -->
-                <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow hover:shadow-md transition">
-                    <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-full w-10 h-10">
-                    <div class="flex-1">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-bold text-gray-700">ReindeerRider
-                                <span class="ml-2 text-xs text-gray-500">(2 hours ago)</span>
-                            </h3>
-                        </div>
-                        <p class="text-sm my-2 text-gray-600">
-                            Enjoying the lights at Orchard Road. Festive vibes everywhere!
+                        <!-- Event Name -->
+                        <p class="text-sm my-1 text-gray-800 font-semibold">
+                            {{ post.event_name }}
                         </p>
-                        <div class="text-xs text-gray-500">
-                            <p>📍 Orchard Road</p>
-                            <p>📌 [103.8631, 1.3090]</p>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- SAMPLE POST 3 -->
-                <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow hover:shadow-md transition">
-                    <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-full w-10 h-10">
-                    <div class="flex-1">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-bold text-gray-700">JingleBelle
-                                <span class="ml-2 text-xs text-gray-500">(1 day ago)</span>
-                            </h3>
-                        </div>
-                        <img src="https://via.placeholder.com/300x180" alt="Post Photo"
-                            class="my-2 rounded-md border border-gray-200">
-                        <p class="text-sm mb-2 text-gray-600">
-                            Had a magical time exploring the Botanic Gardens with the family!
+                        <!-- Image if exists -->
+                        {% if post.image != "[]" %}
+                            <!-- Show first image only or all images -->
+                            {% for img_url in post.image %}
+                            <img src="{{ img_url }}" alt="Post image"
+                                 class="my-2 rounded-md border border-gray-200 w-full object-cover">
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- Caption -->
+                        <p class="text-sm my-2 text-gray-600">
+                            {{ post.caption }}
                         </p>
+                        <!-- Location details -->
                         <div class="text-xs text-gray-500">
-                            <p>📍 Botanic Gardens</p>
-                            <p>📌 [103.8719, 1.2975]</p>
+                            <p>📍 {{ post.location_address }}</p>
+                            <p>📌 [{{ post.longitude }}, {{ post.latitude }}]</p>
                         </div>
                     </div>
                 </div>
-                <!-- End of sample posts -->
+                {% endfor %}
             </div>
         </div>
 
@@ -225,7 +213,8 @@
                 onclick="closeNewPostModal()">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Create a New Post</h2>
@@ -245,31 +234,31 @@
                 <div>
                     <label class="block font-semibold text-gray-700 mb-2" for="postEvent">Event Name</label>
                     <input type="text"
-                        class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        placeholder="Enter event name" name="event_name" required />
+                           class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                           placeholder="Enter event name" name="event_name" required />
                 </div>
 
                 <!-- Post Caption -->
                 <div>
                     <label class="block font-semibold text-gray-700 mb-2" for="postCaption">Caption</label>
                     <textarea id="postCaption"
-                        class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        rows="3" placeholder="Share your thoughts..." name="caption" required></textarea>
+                              class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              rows="3" placeholder="Share your thoughts..." name="caption" required></textarea>
                 </div>
 
                 <!-- Location Input (Stub for real location search) -->
                 <div>
                     <label class="block font-semibold text-gray-700 mb-2" for="postLocation">Location</label>
                     <input type="text" id="postLocation"
-                        class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        placeholder="Search location..." name="location_name" required />
+                           class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                           placeholder="Search location..." name="location_name" required />
                     <div id="locationSuggestions" class="mt-2"></div>
                     <input type="text" id="postCoordinates" name="coordinates" readonly
-                        class="w-full mt-2 border border-gray-300 rounded-md p-2 bg-gray-100" placeholder="Coordinates" />
+                           class="w-full mt-2 border border-gray-300 rounded-md p-2 bg-gray-100" placeholder="Coordinates" />
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded transition">
+                        class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded transition">
                     Post
                 </button>
             </form>
@@ -302,13 +291,13 @@
                     coords: [{{ post.longitude }}, {{ post.latitude }}],
                     event_name: "{{ post.event_name }}",
                     address: "{{ post.location_address }}",
-                    picture_url: "{{post.image[0]}}",
+                    picture_url: {% if post.image is sequence and post.image|length > 0 %}"{{ post.image[0] }}"{% else %}""{% endif %},
                     type: 'post'
                 },
             {% endfor %}
         ];
     
-        // Cause locations
+        // If you have cause data:
         const causes = [
             {% for cause in causes_data %}
                 {
@@ -497,49 +486,47 @@
             }
         });
     
-    // Adjust post section and container width on window resize
-    window.addEventListener('resize', () => {
-        const postSection = document.getElementById('postSection');
-        const postContainer = document.getElementById('postContainer');
-        const isOpen = postSection.style.width !== '0px' && postSection.style.width !== '';
-
-        if (isOpen) {
-            postSection.style.width = window.innerWidth < 768 ? '100%' : '400px';
-            postContainer.style.width = window.innerWidth < 768 ? '100%' : '403.5px'; // 400px + 3.5rem (~56px)
-        }
-    });
-
-    // Initialize map controls
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
-    map.addControl(new mapboxgl.GeolocateControl({
-        positionOptions: {
-            enableHighAccuracy: true
-        },
-        trackUserLocation: true
-    }), 'top-right');
-
-    // Function to fly to a specific location
-    function flyToLocation(lng, lat) {
-        map.flyTo({
-            center: [lng, lat],
-            zoom: 15,
-            essential: true
+        // Adjust post section and container width on window resize
+        window.addEventListener('resize', () => {
+            const postSection = document.getElementById('postSection');
+            const postContainer = document.getElementById('postContainer');
+            const isOpen = postSection.style.width !== '0px' && postSection.style.width !== '';
+    
+            if (isOpen) {
+                postSection.style.width = window.innerWidth < 768 ? '100%' : '400px';
+                postContainer.style.width = window.innerWidth < 768 ? '100%' : '403.5px';
+            }
         });
-    }
-
-    // Event listener for post clicks (if you want to implement this feature)
-    document.getElementById('postFeed').addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('post-location')) {
-            const lng = parseFloat(e.target.dataset.lng);
-            const lat = parseFloat(e.target.dataset.lat);
-            flyToLocation(lng, lat);
+    
+        // Initialize map controls
+        map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+        map.addControl(new mapboxgl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            trackUserLocation: true
+        }), 'top-right');
+    
+        // Function to fly to a specific location
+        function flyToLocation(lng, lat) {
+            map.flyTo({
+                center: [lng, lat],
+                zoom: 15,
+                essential: true
+            });
         }
-    });
+    
+        // Event listener for the map button in posts
+        document.getElementById('postFeed').addEventListener('click', function(e) {
+            if (e.target && (e.target.classList.contains('post-location') || e.target.parentElement.classList.contains('post-location'))) {
+                const button = e.target.classList.contains('post-location') ? e.target : e.target.parentElement;
+                const lng = parseFloat(button.dataset.lng);
+                const lat = parseFloat(button.dataset.lat);
+                flyToLocation(lng, lat);
+            }
+        });
+    </script>
 
-    // You can add more JavaScript functions here as needed
-
-</script>
-
-
+</body>
 </html>

@@ -3,69 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <title>Login - Christmas Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-b from-red-100 to-green-100 min-h-screen flex items-center justify-center">
-  <div id="toast-danger" class="hidden fixed top-4 right-4 flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow" role="alert">
+<body class="bg-gradient-to-b from-red-100 to-green-100 min-h-screen flex items-center justify-center px-4">
+  <!-- Toast Notification -->
+  <div id="toast-danger" class="hidden fixed top-4 right-4 sm:right-8 md:right-16 flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-lg z-50" role="alert">
     <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg">
         <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>
         </svg>
         <span class="sr-only">Error icon</span>
     </div>
-    <div id="toast-message" class="ms-3 text-sm font-normal"></div>
-    <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8" onclick="closeToast()">
+    <div id="toast-message" class="ms-3 text-sm font-normal flex-1"></div>
+    <button type="button" class="ml-2 text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8" onclick="closeToast()">
         <span class="sr-only">Close</span>
         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
         </svg>
     </button>
   </div>
-  <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-    <h1 class="text-2xl font-bold text-green-700 text-center mb-4">Login</h1>
-    <form id="loginForm" class="space-y-4">
+
+  <!-- Login Form Container -->
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto">
+    <h1 class="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-6">Login</h1>
+    <form id="loginForm" class="space-y-6">
       <div>
-        <label class="block mb-1 font-semibold text-gray-700" for="email">Email</label>
+        <label class="block mb-2 font-semibold text-gray-700" for="email">Email</label>
         <input
-          class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+          class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200"
           type="email"
           id="email"
+          placeholder="you@example.com"
           required
         />
       </div>
       <div>
-        <label class="block mb-1 font-semibold text-gray-700" for="password">Password</label>
+        <label class="block mb-2 font-semibold text-gray-700" for="password">Password</label>
         <input
-          class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+          class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200"
           type="password"
           id="password"
+          placeholder="••••••••"
           required
         />
       </div>
       <button
         type="submit"
-        class="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded"
+        class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition duration-200"
       >
         Log In
       </button>
     </form>
-    <div class="mt-4 text-center">
-      <p>
+    <div class="mt-6 text-center">
+      <p class="text-sm">
         Don’t have an account?
-        <a href="/user/signup" class="text-green-700 font-semibold hover:underline"
-          >Sign up</a
-        >
+        <a href="/user/signup" class="text-green-700 font-semibold hover:underline">Sign up</a>
       </p>
     </div>
   </div>
 
-  <!-- Example script for handling form submission to /login -->
+  <!-- JavaScript for Form Handling and Toast -->
   <script>
     const loginForm = document.getElementById('loginForm');
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+            showToast('Please fill in all fields.');
+            return;
+        }
 
         try {
             const response = await fetch('/login', {
@@ -82,7 +91,7 @@
             }
         } catch (err) {
             console.error(err);
-            showToast(err || 'Error logging in. Please try again.');
+            showToast('Error logging in. Please try again.');
         }
     });
 
@@ -91,8 +100,10 @@
         const messageSpan = document.getElementById('toast-message');
         messageSpan.textContent = message;
         toast.classList.remove('hidden'); // Show the toast
+        // Adjust toast width on smaller screens
+        toast.classList.add('max-w-xs');
         setTimeout(() => {
-            toast.classList.add('hidden'); // Hide after a few seconds
+            toast.classList.add('hidden'); // Hide after 3 seconds
         }, 3000);
     }
 

@@ -76,6 +76,14 @@ def signup_post():
             session['user_id'] = user_id
             print(user_id)
 
+            # add to the user table
+            user_data = {
+                "user_id": user_id,
+                "username": username
+            }
+
+            user_response = supabase.table('users').insert(user_data).execute()
+
             flash("Signed up successfully. Please check your email to confirm your account and login again.")
             return jsonify({"message": "Signed up successfully", "redirect": "/login"}), 200
         else:
@@ -147,6 +155,10 @@ def organisation_signup_post():
         return jsonify({"error": "Error signing up"}), 400
 
 @app.route('/', methods=['GET', 'POST'])
+def landing_page():
+    return render_template('landing.html')
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -457,6 +469,15 @@ def map():
                 image_url.append(image_link)
 
             post['image'] = image_url
+
+    # assign usernames based user_id
+    for post in data:
+        user_id = post.get('user_id')
+        user_response = supabase.table("users").select("username").eq("user_id", user_id).execute()
+        user_data = user_response.data
+        if user_data:
+            post['username'] = user_data[0].get('username')
+
     
     organisation_cause_resposne = supabase.table("causes").select("*").execute()
     organisation_causes = organisation_cause_resposne.data
@@ -465,7 +486,19 @@ def map():
         if image_link:
             image_link = supabase.storage.from_('Cause_images').get_public_url(image_link)
             cause['image'] = image_link
-    print(organisation_causes)
+
+    # assign organisation name based on organisation_id
+    for cause in organisation_causes:
+        organisation_id = cause.get('organisation_id')
+        print(f"Testing organisation_id: {organisation_id}")
+        print(organisation_id)
+        organisation_response = supabase.table("organisation").select("organisation_name").eq("organisation_id", organisation_id).execute()
+        print(organisation_response)
+        organisation_data = organisation_response.data
+        if organisation_data:
+            cause['organisation_name'] = organisation_data[0].get('organisation_name')
+    
+    print(data)
     return render_template('map.html', post_data=data, causes_data=organisation_causes)
 
 @app.route('/add_post', methods=['POST'])
@@ -557,7 +590,7 @@ def donate_post():
         return jsonify({"error": "Invalid request data"}), 400
     
     if is_float_try(amount):
-        if (amount := float(amount)) <= 0:
+        if (amount := float(amount)) < 0:
             flash("Invalid amount. Please enter a valid number.")
             return jsonify({"error": "Invalid amount"}), 400
     else:
