@@ -550,8 +550,9 @@ def donate_post():
     data = request.json
     amount = data.get('amount')
     cause_id = data.get('cause_id')
+    card_message = data.get('card_message')
 
-    if not amount or not cause_id:
+    if not amount or not cause_id or not card_message:
         flash("Missing field. Please fill all required details.")
         return jsonify({"error": "Invalid request data"}), 400
     
@@ -576,6 +577,7 @@ def donate_post():
             {
                 "amount": amount,
                 "email": email,
+                "card_message": card_message,
             }
         ).execute()
 
